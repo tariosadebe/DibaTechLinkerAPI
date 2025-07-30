@@ -133,6 +133,9 @@ builder.Services.AddScoped<ISavedLinkService, SavedLinkService>();
 builder.Services.AddScoped<IFolderService, FolderService>();
 builder.Services.AddScoped<IReminderService, ReminderService>();
 
+// Add Email Service
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 // HttpClient for LinkParsingService
 builder.Services.AddHttpClient<ILinkParsingService, LinkParsingService>();
 

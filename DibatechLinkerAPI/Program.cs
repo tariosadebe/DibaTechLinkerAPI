@@ -133,7 +133,7 @@ builder.Services.AddScoped<ISavedLinkService, SavedLinkService>();
 builder.Services.AddScoped<IFolderService, FolderService>();
 builder.Services.AddScoped<IReminderService, ReminderService>();
 
-// Add Email Service
+// Email Service - SendGrid integration for notifications
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 // HttpClient for LinkParsingService

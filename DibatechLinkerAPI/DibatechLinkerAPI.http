@@ -1,0 +1,192 @@
+### DibaTech Linker API Test Collection
+
+@baseUrl = https://localhost:7070
+@apiUrl = {{baseUrl}}/api
+
+### Test API Health (GET root)
+GET {{baseUrl}}
+
+###
+
+### Register a new user
+POST {{apiUrl}}/account/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123!",
+  "confirmPassword": "Test123!",
+  "firstName": "John",
+  "lastName": "Doe"
+}
+
+###
+
+### Login with user credentials
+POST {{apiUrl}}/account/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123!"
+}
+
+###
+
+### Parse a link (no auth required)
+POST {{apiUrl}}/links/parse
+Content-Type: application/json
+
+{
+  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+}
+
+###
+
+### Parse another link (Tech content)
+POST {{apiUrl}}/links/parse
+Content-Type: application/json
+
+{
+  "url": "https://github.com/microsoft/vscode"
+}
+
+###
+
+### Parse a news link
+POST {{apiUrl}}/links/parse
+Content-Type: application/json
+
+{
+  "url": "https://www.bbc.com/news"
+}
+
+###
+
+### Save a link (anonymous user)
+POST {{apiUrl}}/links/save
+Content-Type: application/json
+
+{
+  "parsedLinkId": 1,
+  "customNote": "Interesting video to watch later",
+  "tags": ["entertainment", "music"]
+}
+
+###
+
+### Get saved links (anonymous user)
+GET {{apiUrl}}/links/mine?pageNumber=1&pageSize=10
+
+###
+
+### Get saved links with filters
+GET {{apiUrl}}/links/mine?category=Tech&status=Unread&pageNumber=1&pageSize=10
+
+###
+
+### Update a saved link
+PATCH {{apiUrl}}/links/1
+Content-Type: application/json
+
+{
+  "customNote": "Updated note for this link",
+  "status": "Read"
+}
+
+###
+
+### Mark link as read
+POST {{apiUrl}}/links/1/mark-read
+
+###
+
+### Toggle favourite status
+POST {{apiUrl}}/links/1/toggle-favourite
+
+###
+
+### Generate share link
+POST {{apiUrl}}/links/1/share
+Content-Type: application/json
+
+{
+  "expiryDate": "2024-12-31T23:59:59Z"
+}
+
+###
+
+### Get shared link (public access)
+GET {{apiUrl}}/links/share/SHARE_TOKEN_HERE
+
+###
+
+### Create a folder (requires auth)
+POST {{apiUrl}}/folders
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "name": "Tech Articles",
+  "description": "Collection of interesting tech articles",
+  "color": "#007acc"
+}
+
+###
+
+### Get user folders (requires auth)
+GET {{apiUrl}}/folders
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Subscribe to reminders (requires auth)
+POST {{apiUrl}}/reminders/subscribe
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "frequency": "Weekly",
+  "preferredDay": 1,
+  "preferredTime": "09:00",
+  "isEmailEnabled": true,
+  "isPushEnabled": false
+}
+
+###
+
+### Get reminder status (requires auth)
+GET {{apiUrl}}/reminders/status
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Get user profile (requires auth)
+GET {{apiUrl}}/account/profile
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Update user profile (requires auth)
+PUT {{apiUrl}}/account/profile
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "reminderFrequency": "Daily",
+  "preferredReminderTime": "08:00",
+  "isEmailNotificationEnabled": true
+}
+
+###
+
+### Logout (requires auth)
+POST {{apiUrl}}/account/logout
+Authorization: Bearer YOUR_JWT_TOKEN_HEREechLinkerAPI_HostAddress = http://localhost:5080
+
+GET {{DibatechLinkerAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

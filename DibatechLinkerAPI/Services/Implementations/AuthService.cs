@@ -17,17 +17,20 @@ namespace DibatechLinkerAPI.Services.Implementations
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
+        private readonly IEmailService _emailService; // Inject IEmailService
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration configuration,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            IEmailService emailService) // Add emailService to constructor
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
             _logger = logger;
+            _emailService = emailService; // Initialize emailService
         }
 
         public async Task<AuthResponseDto?> RegisterAsync(RegisterDto request)
@@ -65,6 +68,18 @@ namespace DibatechLinkerAPI.Services.Implementations
                 user.RefreshToken = refreshToken;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
                 await _userManager.UpdateAsync(user);
+
+                // Send welcome email after successful registration
+                try
+                {
+                    await _emailService.SendWelcomeEmailAsync(request.Email, $"{request.FirstName} {request.LastName}");
+                    _logger.LogInformation("Welcome email sent to {Email}", request.Email);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send welcome email to {Email}", request.Email);
+                    // Don't fail registration if email fails
+                }
 
                 return new AuthResponseDto
                 {

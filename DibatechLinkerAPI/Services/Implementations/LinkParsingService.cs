@@ -207,7 +207,7 @@ namespace DibatechLinkerAPI.Services.Implementations
             }
 
             // Default to Website
-            return ContentType.Website;
+            return ContentType.Article;
         }
 
         private string ExtractTitle(HtmlDocument doc, string url)

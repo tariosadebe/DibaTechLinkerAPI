@@ -277,7 +277,7 @@ namespace DibatechLinkerAPI.Controllers
 
             try
             {
-                var result = await _authService.RequestPasswordResetAsync(request.Email);
+                await _authService.RequestPasswordResetAsync(request.Email);
                 
                 // Always return success for security (don't reveal if email exists)
                 return Ok(new { 

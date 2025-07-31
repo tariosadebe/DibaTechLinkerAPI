@@ -10,6 +10,9 @@ namespace DibatechLinkerAPI.Services.Implementations
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
 
+        private const string SendGridFromEmailKey = "SendGrid:FromEmail";
+        private const string SendGridFromNameKey = "SendGrid:FromName";
+
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _configuration = configuration;
@@ -39,8 +42,8 @@ namespace DibatechLinkerAPI.Services.Implementations
 
             try
             {
-                var fromEmail = _configuration["SendGrid:FromEmail"];
-                var fromName = _configuration["SendGrid:FromName"];
+                var fromEmail = _configuration[SendGridFromEmailKey];
+                var fromName = _configuration[SendGridFromNameKey];
                 
                 var from = new EmailAddress(fromEmail, fromName);
                 var to = new EmailAddress(toEmail);
@@ -179,8 +182,8 @@ This email was sent from a notification-only address. Please do not reply to thi
 
             try
             {
-                var fromEmail = _configuration["SendGrid:FromEmail"];
-                var fromName = _configuration["SendGrid:FromName"];
+                var fromEmail = _configuration[SendGridFromEmailKey];
+                var fromName = _configuration[SendGridFromNameKey];
                 
                 var from = new EmailAddress(fromEmail, fromName);
                 var to = new EmailAddress(toEmail);
@@ -302,8 +305,8 @@ public async Task<bool> SendPasswordResetEmailAsync(string toEmail, string reset
 
     try
     {
-        var fromEmail = _configuration["SendGrid:FromEmail"];
-        var fromName = _configuration["SendGrid:FromName"];
+        var fromEmail = _configuration[SendGridFromEmailKey];
+        var fromName = _configuration[SendGridFromNameKey];
         
         var from = new EmailAddress(fromEmail, fromName);
         var to = new EmailAddress(toEmail);
@@ -421,7 +424,7 @@ This email was sent from a notification-only address. Please do not reply to thi
 
             try
             {
-                var from = new EmailAddress(_configuration["SendGrid:FromEmail"], _configuration["SendGrid:FromName"]);
+                var from = new EmailAddress(_configuration[SendGridFromEmailKey], _configuration[SendGridFromNameKey]);
                 var to = new EmailAddress(toEmail);
                 var subject = "Test Email - DibaTech Linker";
 

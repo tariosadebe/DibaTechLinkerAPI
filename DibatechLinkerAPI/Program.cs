@@ -12,7 +12,8 @@ using AspNetCoreRateLimit;
 using Hangfire;
 using Hangfire.SqlServer;
 using Hangfire.MemoryStorage;
-using Npgsql.EntityFrameworkCore.PostgreSQL; // Add this line
+using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Hangfire.PostgreSql; // Add this line
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -186,28 +187,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Hangfire Configuration  
-if (builder.Environment.IsDevelopment())
-{
-    // Use memory storage for development
-    builder.Services.AddHangfire(configuration => configuration
-        .UseMemoryStorage());
-}
-else
-{
-    // Use PostgreSQL for production (Render)
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("postgres"))
-    {
-        builder.Services.AddHangfire(configuration => configuration
-            .UsePostgreSqlStorage(connectionString));
-    }
-    else
-    {
-        builder.Services.AddHangfire(configuration => configuration
-            .UseSqlServerStorage(connectionString));
-    }
-}
+// Hangfire Configuration - Simple version for quick deployment
+builder.Services.AddHangfire(configuration => configuration
+    .UseMemoryStorage()); // Use memory storage for all environments
 
 builder.Services.AddHangfireServer();
 

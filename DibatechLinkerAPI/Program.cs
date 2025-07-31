@@ -186,24 +186,27 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Hangfire Configuration
+// Hangfire Configuration  
 if (builder.Environment.IsDevelopment())
 {
-    // Use in-memory storage for development with SQLite
+    // Use memory storage for development
     builder.Services.AddHangfire(configuration => configuration
-        .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-        .UseSimpleAssemblyNameTypeSerializer()
-        .UseRecommendedSerializerSettings()
         .UseMemoryStorage());
 }
 else
 {
-    // Use SQL Server storage for production
-    builder.Services.AddHangfire(configuration => configuration
-        .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-        .UseSimpleAssemblyNameTypeSerializer()
-        .UseRecommendedSerializerSettings()
-        .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+    // Use PostgreSQL for production (Render)
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("postgres"))
+    {
+        builder.Services.AddHangfire(configuration => configuration
+            .UsePostgreSqlStorage(connectionString));
+    }
+    else
+    {
+        builder.Services.AddHangfire(configuration => configuration
+            .UseSqlServerStorage(connectionString));
+    }
 }
 
 builder.Services.AddHangfireServer();

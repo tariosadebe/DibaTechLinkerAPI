@@ -11,7 +11,8 @@ using DibatechLinkerAPI.Services.Implementations;
 using AspNetCoreRateLimit;
 using Hangfire;
 using Hangfire.SqlServer;
-using Hangfire.MemoryStorage; // Add this line
+using Hangfire.MemoryStorage;
+using Npgsql.EntityFrameworkCore.PostgreSQL; // Add this line
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,16 +22,26 @@ builder.Services.AddControllers();
 // Database Configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    
     if (builder.Environment.IsDevelopment())
     {
-        // Use SQLite for development - data will persist
-        var connectionString = builder.Configuration.GetConnectionString("SqliteConnection") 
+        // UNCHANGED - Still uses SQLite for development
+        var devConnectionString = builder.Configuration.GetConnectionString("SqliteConnection") 
             ?? "Data Source=dibatechlinker.db";
-        options.UseSqlite(connectionString);
+        options.UseSqlite(devConnectionString);
     }
     else
     {
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+        // ENHANCED - Checks connection string type for production
+        if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("postgres"))
+        {
+            options.UseNpgsql(connectionString);  // For Render
+        }
+        else
+        {
+            options.UseSqlServer(connectionString);  // For Azure/AWS
+        }
     }
 });
 
@@ -162,9 +173,16 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+            "https://linker.dibatech.ng",              // Correct subdomain for web version
+            "https://dibatech-linker-web.onrender.com", // Render deployment URL
+            "http://localhost:3000",                    // Local development
+            "http://localhost:3001",                    // Alternative local port
+            "http://localhost:5173"                     // Vite default port
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 
@@ -232,5 +250,9 @@ if (app.Environment.IsDevelopment())
     // Use migrations instead of EnsureCreated
     context.Database.Migrate();
 }
+
+// Configure port for Render deployment
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();

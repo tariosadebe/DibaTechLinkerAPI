@@ -9,6 +9,9 @@ using DibatechLinkerAPI.Models.Domain;
 using DibatechLinkerAPI.Services.Interfaces;
 using DibatechLinkerAPI.Services.Implementations;
 using AspNetCoreRateLimit;
+using Hangfire;
+using Hangfire.SqlServer;
+using Hangfire.MemoryStorage; // Add this line
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -165,6 +168,28 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Hangfire Configuration
+if (builder.Environment.IsDevelopment())
+{
+    // Use in-memory storage for development with SQLite
+    builder.Services.AddHangfire(configuration => configuration
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseMemoryStorage());
+}
+else
+{
+    // Use SQL Server storage for production
+    builder.Services.AddHangfire(configuration => configuration
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
+
+builder.Services.AddHangfireServer();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -191,6 +216,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Add Hangfire dashboard in development
+if (app.Environment.IsDevelopment())
+{
+    app.UseHangfireDashboard("/hangfire");
+}
 
 // Seed data in development
 if (app.Environment.IsDevelopment())

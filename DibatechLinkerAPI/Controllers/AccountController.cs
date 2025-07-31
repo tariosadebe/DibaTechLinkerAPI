@@ -267,5 +267,66 @@ namespace DibatechLinkerAPI.Controllers
                 });
             }
         }
+
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _authService.RequestPasswordResetAsync(request.Email);
+                
+                // Always return success for security (don't reveal if email exists)
+                return Ok(new { 
+                    success = true, 
+                    message = "If your email is registered with us, you will receive password reset instructions within a few minutes. Please check your inbox and spam folder." 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing forgot password request for {Email}", request.Email);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "An error occurred while processing your request. Please try again later." 
+                });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _authService.ResetPasswordAsync(request.Email, request.Token, request.NewPassword);
+                
+                if (result)
+                {
+                    return Ok(new { 
+                        success = true, 
+                        message = "Your password has been reset successfully. You can now login with your new password." 
+                    });
+                }
+
+                return BadRequest(new { 
+                    success = false, 
+                    message = "Password reset failed. The reset link may be invalid, expired, or already used. Please request a new password reset." 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing password reset for {Email}", request.Email);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "An error occurred while resetting your password. Please try again later." 
+                });
+            }
+        }
     }
 }

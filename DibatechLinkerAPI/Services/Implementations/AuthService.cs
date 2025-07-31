@@ -65,7 +65,7 @@ namespace DibatechLinkerAPI.Services.Implementations
                 var token = GenerateJwtToken(user);
                 var refreshToken = GenerateRefreshToken();
 
-                user.RefreshToken = refreshToken;
+                user.RefreshToken = refreshToken ?? string.Empty;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
                 await _userManager.UpdateAsync(user);
 
@@ -129,7 +129,7 @@ namespace DibatechLinkerAPI.Services.Implementations
                 var token = GenerateJwtToken(user);
                 var refreshToken = GenerateRefreshToken();
 
-                user.RefreshToken = refreshToken;
+                user.RefreshToken = refreshToken ?? string.Empty;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
                 user.LastLoginAt = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
@@ -142,7 +142,7 @@ namespace DibatechLinkerAPI.Services.Implementations
                     User = new UserProfileDto
                     {
                         Id = user.Id,
-                        Email = user.Email,
+                        Email = user.Email ?? string.Empty,
                         FirstName = user.FirstName,
                         LastName = user.LastName,
                         CreatedAt = user.CreatedAt,
@@ -178,7 +178,7 @@ namespace DibatechLinkerAPI.Services.Implementations
                 var newToken = GenerateJwtToken(user);
                 var newRefreshToken = GenerateRefreshToken();
 
-                user.RefreshToken = newRefreshToken;
+                user.RefreshToken = newRefreshToken ?? string.Empty;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
                 await _userManager.UpdateAsync(user);
 
@@ -302,6 +302,82 @@ namespace DibatechLinkerAPI.Services.Implementations
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user profile for {UserId}", userId);
+                return false;
+            }
+        }
+
+        public async Task<bool> RequestPasswordResetAsync(string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    // Don't reveal if email exists or not for security
+                    _logger.LogInformation("Password reset requested for non-existent email: {Email}", email);
+                    return true;
+                }
+
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                
+                // URL encode the token for safe transmission
+                var encodedToken = Uri.EscapeDataString(resetToken);
+                
+                // Send password reset email
+                var emailSent = await _emailService.SendPasswordResetEmailAsync(email, encodedToken);
+                
+                if (emailSent)
+                {
+                    _logger.LogInformation("Password reset email sent to {Email}", email);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to send password reset email to {Email}", email);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error requesting password reset for {Email}", email);
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string email, string token, string newPassword)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    _logger.LogWarning("Password reset attempted for non-existent email: {Email}", email);
+                    return false;
+                }
+
+                // URL decode the token
+                var decodedToken = Uri.UnescapeDataString(token);
+                
+                var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
+                
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Password reset successful for {Email}", email);
+                    
+                    // Update last login time
+                    user.LastLoginAt = DateTime.UtcNow;
+                    await _userManager.UpdateAsync(user);
+                    
+                    return true;
+                }
+
+                _logger.LogWarning("Password reset failed for {Email}. Errors: {Errors}", 
+                    email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for {Email}", email);
                 return false;
             }
         }

@@ -13,5 +13,7 @@ namespace DibatechLinkerAPI.Services.Interfaces
         Task<bool> UpdateUserProfileAsync(string userId, UpdateProfileDto request);
         string GenerateJwtToken(ApplicationUser user);
         string GenerateRefreshToken();
+        Task<bool> RequestPasswordResetAsync(string email);
+        Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
     }
 }

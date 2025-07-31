@@ -20,8 +20,9 @@ namespace DibatechLinkerAPI.Models.Domain
 
     public enum ContentType
     {
-        Video,
         Article,
+        Video,
+        Website, // Add this line
         Product,
         SocialPost,
         Podcast,

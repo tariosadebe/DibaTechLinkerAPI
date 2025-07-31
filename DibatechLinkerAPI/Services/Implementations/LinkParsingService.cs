@@ -61,8 +61,19 @@ namespace DibatechLinkerAPI.Services.Implementations
                 parsedLink.SiteName = ExtractSiteName(doc, uri);
 
                 // Determine content type and category
-                parsedLink.ContentType = DetermineContentType(url, parsedLink.Title, parsedLink.Description, parsedLink.SiteName);
-                parsedLink.Category = CategorizeContent(parsedLink.Title, parsedLink.Description, parsedLink.Domain, parsedLink.SiteName);
+                var contentType = DetermineContentType(
+                    parsedLink.OriginalUrl,  // Fixed property name
+                    parsedLink.Title ?? "", 
+                    parsedLink.Description ?? "", 
+                    parsedLink.SiteName ?? ""
+                );
+                parsedLink.ContentType = contentType;
+                parsedLink.Category = CategorizeContent(
+                    parsedLink.Title ?? "", 
+                    parsedLink.Description ?? "", 
+                    parsedLink.Domain ?? "", 
+                    parsedLink.SiteName ?? ""
+                );
 
                 parsedLink.IsValidUrl = true;
             }
@@ -76,16 +87,18 @@ namespace DibatechLinkerAPI.Services.Implementations
             return parsedLink;
         }
 
-        public async Task<bool> IsValidUrlAsync(string url)
+        // Fix the IsValidUrlAsync method
+        public Task<bool> IsValidUrlAsync(string url)
         {
             try
             {
                 var uri = new Uri(url);
-                return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+                var isValid = uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+                return Task.FromResult(isValid);
             }
             catch
             {
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -148,43 +161,53 @@ namespace DibatechLinkerAPI.Services.Implementations
             return LinkCategory.Uncategorized;
         }
 
+        // Fix the DetermineContentType method with correct enum values
         public ContentType DetermineContentType(string url, string title, string description, string siteName)
         {
-            var content = $"{url} {title} {description} {siteName}".ToLowerInvariant();
+            title = title ?? "";
+            description = description ?? "";
+            siteName = siteName ?? "";
+            
+            var urlLower = url.ToLower();
+            var titleLower = title.ToLower();
+            var descriptionLower = description.ToLower();
+            var siteNameLower = siteName.ToLower();
 
-            // Video platforms
-            if (content.Contains("youtube") || content.Contains("vimeo") || content.Contains("tiktok") || 
-                content.Contains("video") || url.Contains("/watch") || url.Contains("/v/"))
+            // Video content detection
+            if (urlLower.Contains("youtube.com") || urlLower.Contains("youtu.be") ||
+                urlLower.Contains("vimeo.com") || urlLower.Contains("twitch.tv") ||
+                titleLower.Contains("video") || descriptionLower.Contains("watch"))
+            {
                 return ContentType.Video;
+            }
 
-            // Shopping/Product pages
-            if (content.Contains("amazon") || content.Contains("ebay") || content.Contains("jumia") || 
-                content.Contains("konga") || content.Contains("product") || content.Contains("buy") || 
-                url.Contains("/product/") || url.Contains("/item/"))
-                return ContentType.Product;
+            // Article/Blog content detection
+            if (urlLower.Contains("blog") || urlLower.Contains("article") ||
+                urlLower.Contains("medium.com") || urlLower.Contains("dev.to") ||
+                siteNameLower.Contains("blog") || titleLower.Contains("tutorial") ||
+                descriptionLower.Contains("article") ||
+                urlLower.Contains("twitter.com") || urlLower.Contains("x.com") ||
+                urlLower.Contains("facebook.com") || urlLower.Contains("instagram.com") ||
+                urlLower.Contains("linkedin.com") || urlLower.Contains("tiktok.com") ||
+                siteNameLower.Contains("news") || urlLower.Contains("news") ||
+                titleLower.Contains("breaking") || descriptionLower.Contains("reported") ||
+                urlLower.Contains("docs") || urlLower.Contains("documentation") ||
+                urlLower.Contains("reference") || urlLower.Contains("api") ||
+                titleLower.Contains("documentation") || titleLower.Contains("guide"))
+            {
+                return ContentType.Article;
+            }
 
-            // Social media posts
-            if (content.Contains("twitter") || content.Contains("facebook") || content.Contains("instagram") ||
-                content.Contains("linkedin") || url.Contains("/status/") || url.Contains("/post/"))
-                return ContentType.SocialPost;
+            // E-commerce/Shopping sites - use Website
+            if (urlLower.Contains("shop") || urlLower.Contains("store") ||
+                urlLower.Contains("amazon.com") || urlLower.Contains("ebay.com") ||
+                titleLower.Contains("buy") || descriptionLower.Contains("price"))
+            {
+                return ContentType.Article; // Instead of ContentType.Website
+            }
 
-            // Podcast platforms
-            if (content.Contains("podcast") || content.Contains("spotify") || content.Contains("soundcloud") ||
-                content.Contains("anchor") || content.Contains("apple podcasts"))
-                return ContentType.Podcast;
-
-            // Image platforms
-            if (content.Contains("imgur") || content.Contains("flickr") || content.Contains("pinterest") ||
-                url.Contains(".jpg") || url.Contains(".png") || url.Contains(".gif"))
-                return ContentType.Image;
-
-            // Document platforms
-            if (content.Contains("pdf") || content.Contains("document") || content.Contains("docs.google") ||
-                url.Contains(".pdf") || url.Contains(".doc"))
-                return ContentType.Document;
-
-            // Default to article
-            return ContentType.Article;
+            // Default to Website
+            return ContentType.Website;
         }
 
         private string ExtractTitle(HtmlDocument doc, string url)

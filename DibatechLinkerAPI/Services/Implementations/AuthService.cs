@@ -19,6 +19,9 @@ namespace DibatechLinkerAPI.Services.Implementations
         private readonly ILogger<AuthService> _logger;
         private readonly IEmailService _emailService; // Inject IEmailService
 
+        private const string SendGridFromEmailKey = "SendGrid:FromEmail";
+        private const string SendGridFromNameKey = "SendGrid:FromName";
+
         public AuthService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,

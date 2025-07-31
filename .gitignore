@@ -201,6 +201,10 @@ PublishProfiles/
 .env.production
 appsettings.Production.json
 
+# User secrets
+appsettings.Local.json
+appsettings.*.Local.json
+
 # JetBrains Rider
 *.sln.iml
 .idea/
@@ -215,3 +219,17 @@ appsettings.Production.json
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# SendGrid API keys
+**/appsettings.Production.json
+**/appsettings.Staging.json
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Build outputs
+bin/
+obj/

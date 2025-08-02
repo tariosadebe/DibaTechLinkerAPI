@@ -209,7 +209,7 @@ app.UseHttpsRedirection();
 app.UseCors("DefaultPolicy");
 
 // Add Rate Limiting Middleware (before authentication)
-app.UseIpRateLimiting();
+//app.UseIpRateLimiting();
 
 app.UseSession();
 

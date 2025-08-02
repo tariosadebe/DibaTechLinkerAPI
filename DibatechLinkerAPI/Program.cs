@@ -40,6 +40,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
         Console.WriteLine($"DATABASE_URL exists: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL"))}");
         Console.WriteLine($"Connection string length: {connectionString?.Length ?? 0}");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            Console.WriteLine($"Connection string preview: {connectionString.Substring(0, Math.Min(50, connectionString.Length))}...");
+        }
         
         if (string.IsNullOrEmpty(connectionString))
         {
@@ -243,6 +247,24 @@ if (app.Environment.IsDevelopment())
     
     // Use migrations instead of EnsureCreated
     context.Database.Migrate();
+}
+else
+{
+    // Run migrations in production too
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
+    try
+    {
+        Console.WriteLine("Applying database migrations...");
+        context.Database.Migrate();
+        Console.WriteLine("Database migrations completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database migration failed: {ex.Message}");
+        throw;
+    }
 }
 
 // Configure port for Render deployment

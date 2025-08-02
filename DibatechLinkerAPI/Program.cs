@@ -23,8 +23,6 @@ builder.Services.AddControllers();
 // Database Configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    
     if (builder.Environment.IsDevelopment())
     {
         // UNCHANGED - Still uses SQLite for development
@@ -34,8 +32,21 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
     else
     {
-        // ENHANCED - Checks connection string type for production
-        if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("postgres"))
+        // PRODUCTION - Use Render's DATABASE_URL environment variable
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? builder.Configuration.GetConnectionString("DefaultConnection");
+        
+        // Log connection string info for debugging (without exposing sensitive data)
+        Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+        Console.WriteLine($"DATABASE_URL exists: {!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL"))}");
+        Console.WriteLine($"Connection string length: {connectionString?.Length ?? 0}");
+        
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException("No database connection string found. Set DATABASE_URL environment variable or DefaultConnection in appsettings.");
+        }
+
+        if (connectionString.Contains("postgres"))
         {
             options.UseNpgsql(connectionString);  // For Render
         }

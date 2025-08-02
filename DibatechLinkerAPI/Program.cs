@@ -196,15 +196,13 @@ builder.Services.AddHangfireServer();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments for testing
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "DibaTech Linker API v1");
-        c.RoutePrefix = string.Empty; // Serve Swagger UI at root
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "DibaTech Linker API v1");
+    c.RoutePrefix = string.Empty; // Serve Swagger UI at root
+});
 
 app.UseHttpsRedirection();
 

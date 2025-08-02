@@ -33,8 +33,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     else
     {
         // PRODUCTION - Use Render's DATABASE_URL environment variable
-        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-            ?? builder.Configuration.GetConnectionString("DefaultConnection");
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+        
+        // Fallback: Build connection string from individual parts if DATABASE_URL is truncated
+        if (string.IsNullOrEmpty(connectionString) || connectionString.Length < 120)
+        {
+            var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "dpg-d25nvrs9c44c73djd600-a";
+            var database = Environment.GetEnvironmentVariable("DB_NAME") ?? "dibatechlinker";
+            var username = Environment.GetEnvironmentVariable("DB_USER") ?? "dibatechuser";
+            var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "XER6W44FrC5LUqN1Wi4LczxBO5T91mOQ";
+            var port = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+            
+            connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};";
+            Console.WriteLine("Using fallback connection string construction due to truncated DATABASE_URL");
+        }
+        
+        // Fallback to appsettings if still nothing
+        connectionString ??= builder.Configuration.GetConnectionString("DefaultConnection");
         
         // Log connection string info for debugging (without exposing sensitive data)
         Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
